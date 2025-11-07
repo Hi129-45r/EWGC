@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مراقب الإنترنت - التتبع التلقائي</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --danger: #e63946;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --bg: #ffffff;
+            --text: #333333;
+            --card-bg: #f8f9fa;
+            --border: #dee2e6;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-mode {
+            --primary: #4895ef;
+            --secondary: #560bad;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --danger: #e63946;
+            --light: #343a40;
+            --dark: #f8f9fa;
+            --gray: #adb5bd;
+            --bg: #121212;
+            --text: #e9ecef;
+            --card-bg: #1e1e1e;
+            --border: #495057;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            font-size: 24px;
+            color: var(--primary);
+        }
+
+        .logo h1 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .theme-toggle {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 8px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .stats-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 12px var(--shadow);
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .current-usage {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .usage-amount {
+            font-size: 38px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+
+        .usage-limit {
+            color: var(--gray);
+            font-size: 16px;
+        }
+
+        .progress-bar {
+            height: 12px;
+            background: var(--light);
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .progress.safe {
+            background: var(--success);
+        }
+
+        .progress.warning {
+            background: var(--warning);
+        }
+
+        .progress.danger {
+            background: var(--danger);
+        }
+
+        .time-periods {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .period-btn {
+            flex: 1;
+            min-width: 70px;
+            padding: 10px 5px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-size: 13px;
+        }
+
+        .period-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .stat-item {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 5px 0;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--gray);
+        }
+
+        .chart-container {
+            height: 220px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid var(--border);
+        }
+
+        .limit-section {
+            margin-top: 30px;
+        }
+
+        .limit-options {
+            display: flex;
+            gap: 8px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .limit-option {
+            padding: 8px 15px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .limit-option.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .custom-limit {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .custom-limit input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--card-bg);
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .custom-limit button {
+            padding: 10px 15px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .notifications {
+            margin-top: 30px;
+        }
+
+        .notification {
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-right: 4px solid var(--warning);
+            background: var(--card-bg);
+            font-size: 14px;
+        }
+
+        .notification i {
+            font-size: 18px;
+        }
+
+        .notification.success {
+            border-right-color: var(--success);
+        }
+
+        .notification.success i {
+            color: var(--success);
+        }
+
+        .notification.warning {
+            border-right-color: var(--warning);
+        }
+
+        .notification.warning i {
+            color: var(--warning);
+        }
+
+        .notification.danger {
+            border-right-color: var(--danger);
+        }
+
+        .notification.danger i {
+            color: var(--danger);
+        }
+
+        .settings {
+            margin-top: 30px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 22px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--gray);
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        footer {
+            text-align: center;
+            padding: 15px 0;
+            margin-top: 30px;
+            color: var(--gray);
+            font-size: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .auto-track-section {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 12px;
+            margin: 15px 0;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .tracking-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.inactive {
+            background: var(--gray);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* تحسينات للهواتف */
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .logo h1 {
+                font-size: 18px;
+            }
+            
+            .theme-toggle {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            
+            .stats-card {
+                padding: 15px;
+            }
+            
+            .usage-amount {
+                font-size: 32px;
+            }
+            
+            .period-btn {
+                font-size: 12px;
+                padding: 8px 4px;
+            }
+            
+            .stat-value {
+                font-size: 18px;
+            }
+            
+            .chart-container {
+                height: 200px;
+                padding: 10px;
+            }
+            
+            .limit-option {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            
+            .custom-limit {
+                flex-direction: column;
+            }
+            
+            .custom-limit button {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 350px) {
+            .time-periods {
+                flex-direction: column;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+
+        /* إشعارات النظام */
+        .system-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-right: 4px solid var(--warning);
+            max-width: 300px;
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+
+        .system-notification.show {
+            transform: translateX(0);
+        }
+
+        .system-notification.success {
+            border-right-color: var(--success);
+        }
+
+        .system-notification.warning {
+            border-right-color: var(--warning);
+        }
+
+        .system-notification.danger {
+            border-right-color: var(--danger);
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .notification-title {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            color: var(--gray);
+        }
+
+        .notification-body {
+            font-size: 13px;
+        }
+
+        .dark-mode .system-notification {
+            background: var(--card-bg);
+            color: var(--text);
+        }
+
+        .usage-change {
+            font-size: 12px;
+            color: var(--gray);
+            margin-top: 5px;
+        }
+
+        .usage-change.positive {
+            color: var(--danger);
+        }
+
+        .usage-change.negative {
+            color: var(--success);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <h1>مراقب الإنترنت</h1>
+            </div>
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+                <span>الوضع الليلي</span>
+            </button>
+        </header>
+
+        <div class="auto-track-section">
+            <h3><i class="fas fa-satellite-dish"></i> التتبع التلقائي للاستهلاك</h3>
+            <div class="tracking-status">
+                <div class="status-indicator" id="statusIndicator"></div>
+                <span id="statusText">جاري تتبع الاستهلاك...</span>
+            </div>
+            <div class="usage-change" id="usageChange"></div>
+        </div>
+
+        <div class="stats-card">
+            <div class="current-usage">
+                <h2>استهلاكك الحالي</h2>
+                <div class="usage-amount" id="currentUsage">0 GB</div>
+                <div class="usage-limit" id="usageLimitText">من أصل 20 GB</div>
+                <div class="progress-bar">
+                    <div class="progress safe" id="usageProgress" style="width: 0%"></div>
+                </div>
+                <div id="usagePercentage">0% من الباقة المستخدمة</div>
+            </div>
+
+            <div class="time-periods">
+                <div class="period-btn active" data-period="day">آخر 24 ساعة</div>
+                <div class="period-btn" data-period="week">آخر 7 أيام</div>
+                <div class="period-btn" data-period="month">آخر 30 يوم</div>
+                <div class="period-btn" data-period="year">آخر سنة</div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-label">إجمالي الجيجابايت</div>
+                    <div class="stat-value" id="totalUsage">0 GB</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">أعلى يوم استخدام</div>
+                    <div class="stat-value" id="peakUsage">0 GB</div>
+                    <div class="stat-label" id="peakDate">-</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">المتوسط اليومي</div>
+                    <div class="stat-value" id="averageUsage">0 GB</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="usageChart"></canvas>
+            </div>
+
+            <div class="limit-section">
+                <h3>إعداد حد البيانات</h3>
+                <div class="limit-options">
+                    <div class="limit-option" data-limit="10">10 GB</div>
+                    <div class="limit-option active" data-limit="20">20 GB</div>
+                    <div class="limit-option" data-limit="50">50 GB</div>
+                    <div class="limit-option" data-limit="100">100 GB</div>
+                </div>
+                <div class="custom-limit">
+                    <input type="number" id="customLimit" placeholder="أدخل الحد المطلوب (GB)" min="1">
+                    <button id="setCustomLimit">تطبيق</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="notifications" id="notificationsContainer">
+            <!-- سيتم إضافة التنبيهات ديناميكياً -->
+        </div>
+
+        <div class="settings">
+            <h3>الإعدادات</h3>
+            <div class="setting-item">
+                <div>تفعيل التتبع التلقائي</div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="autoTrackToggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <div>تفعيل الإشعارات</div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="notificationsToggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <div>إشعارات النظام</div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="systemNotificationsToggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <div>وضع توفير البيانات</div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="dataSavingToggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <div>إعادة تعيين الإحصائيات</div>
+                <button id="resetData" style="padding: 8px 15px; background: var(--danger); color: white; border: none; border-radius: 5px; cursor: pointer;">إعادة تعيين</button>
+            </div>
+        </div>
+
+        <footer>
+            <p>© 2023 مراقب الإنترنت - التتبع التلقائي للاستهلاك</p>
+        </footer>
+    </div>
+
+    <!-- إشعارات النظام -->
+    <div id="systemNotificationsContainer"></div>
+
+    <script>
+        // بيانات التطبيق
+        let appData = {
+            dataLimit: 20,
+            usageData: [],
+            autoTrackEnabled: true,
+            notificationsEnabled: true,
+            systemNotificationsEnabled: true,
+            dataSavingMode: false,
+            currentPeriod: 'day',
+            trackingInterval: null,
+            lastUpdate: null,
+            theme: 'light',
+            resetInProgress: false,
+            lastUsageAmount: 0,
+            resetTimestamp: Date.now() // إضافة طابع زمني للإعادة
+        };
+
+        // عناصر DOM
+        const elements = {
+            themeToggle: document.getElementById('themeToggle'),
+            currentUsage: document.getElementById('currentUsage'),
+            usageLimitText: document.getElementById('usageLimitText'),
+            usageProgress: document.getElementById('usageProgress'),
+            usagePercentage: document.getElementById('usagePercentage'),
+            totalUsage: document.getElementById('totalUsage'),
+            peakUsage: document.getElementById('peakUsage'),
+            peakDate: document.getElementById('peakDate'),
+            averageUsage: document.getElementById('averageUsage'),
+            notificationsContainer: document.getElementById('notificationsContainer'),
+            systemNotificationsContainer: document.getElementById('systemNotificationsContainer'),
+            usageChart: document.getElementById('usageChart'),
+            customLimit: document.getElementById('customLimit'),
+            setCustomLimit: document.getElementById('setCustomLimit'),
+            autoTrackToggle: document.getElementById('autoTrackToggle'),
+            notificationsToggle: document.getElementById('notificationsToggle'),
+            systemNotificationsToggle: document.getElementById('systemNotificationsToggle'),
+            dataSavingToggle: document.getElementById('dataSavingToggle'),
+            resetData: document.getElementById('resetData'),
+            statusIndicator: document.getElementById('statusIndicator'),
+            statusText: document.getElementById('statusText'),
+            usageChange: document.getElementById('usageChange')
+        };
+
+        // مخطط الاستهلاك
+        let usageChart;
+
+        // تهيئة التطبيق
+        function initApp() {
+            loadData();
+            setupEventListeners();
+            applySavedSettings();
+            startAutoTracking();
+            renderData();
+            updateChart();
+            checkNotifications();
+        }
+
+        // تحميل البيانات من localStorage
+        function loadData() {
+            const savedData = localStorage.getItem('internetMonitorData');
+            if (savedData) {
+                const parsedData = JSON.parse(savedData);
+                appData = { ...appData, ...parsedData };
+                
+                // تنظيف البيانات القديمة إذا كانت من قبل الإعادة
+                const currentResetTimestamp = appData.resetTimestamp || Date.now();
+                if (currentResetTimestamp !== appData.resetTimestamp) {
+                    generateFreshInitialData();
+                } else {
+                    // تحويل التواريخ القديمة إذا لزم الأمر
+                    appData.usageData.forEach(item => {
+                        if (typeof item.date === 'string' && !item.date.includes('T')) {
+                            item.date = new Date(item.date).toISOString();
+                        }
+                    });
+                }
+            }
+            
+            // إذا لم تكن هناك بيانات، إنشاء بيانات أولية جديدة
+            if (appData.usageData.length === 0) {
+                generateFreshInitialData();
+            }
+            
+            appData.lastUpdate = new Date().toISOString();
+        }
+
+        // تطبيق الإعدادات المحفوظة
+        function applySavedSettings() {
+            // تطبيق السمة
+            if (appData.theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                elements.themeToggle.innerHTML = '<i class="fas fa-sun"></i><span>الوضع النهاري</span>';
+            }
+
+            // تطبيق إعدادات التبديل
+            elements.autoTrackToggle.checked = appData.autoTrackEnabled;
+            elements.notificationsToggle.checked = appData.notificationsEnabled;
+            elements.systemNotificationsToggle.checked = appData.systemNotificationsEnabled;
+            elements.dataSavingToggle.checked = appData.dataSavingMode;
+
+            // تطبيق حد البيانات النشط
+            document.querySelectorAll('.limit-option').forEach(option => {
+                if (parseInt(option.getAttribute('data-limit')) === appData.dataLimit) {
+                    option.classList.add('active');
+                } else {
+                    option.classList.remove('active');
+                }
+            });
+        }
+
+        // إنشاء بيانات أولية جديدة تماماً
+        function generateFreshInitialData() {
+            const today = new Date();
+            appData.usageData = [];
+            
+            // إنشاء بيانات لليوم الحالي فقط - تبدأ من الصفر
+            const todayData = {
+                date: today.toISOString(),
+                amount: 0.0 // تبدأ من الصفر تماماً
+            };
+            
+            appData.usageData.push(todayData);
+            appData.resetTimestamp = Date.now(); // تحديث طابع الزمن للإعادة
+            
+            console.log('تم إنشاء بيانات جديدة تماماً:', todayData);
+            saveData();
+        }
+
+        // حفظ البيانات في localStorage
+        function saveData() {
+            localStorage.setItem('internetMonitorData', JSON.stringify(appData));
+        }
+
+        // إعداد مستمعي الأحداث
+        function setupEventListeners() {
+            // تبديل الوضع الليلي/النهاري
+            elements.themeToggle.addEventListener('click', toggleTheme);
+            
+            // أزرار الفترات الزمنية
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    appData.currentPeriod = this.getAttribute('data-period');
+                    saveData();
+                    renderData();
+                    updateChart();
+                });
+            });
+            
+            // خيارات الحدود
+            document.querySelectorAll('.limit-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.limit-option').forEach(o => o.classList.remove('active'));
+                    this.classList.add('active');
+                    appData.dataLimit = parseInt(this.getAttribute('data-limit'));
+                    saveData();
+                    renderData();
+                    checkNotifications();
+                });
+            });
+            
+            // تعيين حد مخصص
+            elements.setCustomLimit.addEventListener('click', setCustomLimit);
+            
+            // تبديل التتبع التلقائي
+            elements.autoTrackToggle.addEventListener('change', function() {
+                appData.autoTrackEnabled = this.checked;
+                saveData();
+                if (this.checked) {
+                    startAutoTracking();
+                } else {
+                    stopAutoTracking();
+                }
+                updateTrackingStatus();
+            });
+            
+            // تبديل الإشعارات
+            elements.notificationsToggle.addEventListener('change', function() {
+                appData.notificationsEnabled = this.checked;
+                saveData();
+                checkNotifications();
+            });
+            
+            // تبديل إشعارات النظام
+            elements.systemNotificationsToggle.addEventListener('change', function() {
+                appData.systemNotificationsEnabled = this.checked;
+                saveData();
+                if (this.checked) {
+                    requestNotificationPermission();
+                }
+            });
+            
+            // تبديل وضع توفير البيانات
+            elements.dataSavingToggle.addEventListener('change', function() {
+                appData.dataSavingMode = this.checked;
+                saveData();
+            });
+            
+            // إعادة تعيين البيانات
+            elements.resetData.addEventListener('click', resetData);
+            
+            // طلب إذن الإشعارات عند التحميل
+            requestNotificationPermission();
+        }
+
+        // طلب إذن إشعارات النظام
+        function requestNotificationPermission() {
+            if ("Notification" in window && appData.systemNotificationsEnabled) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        console.log("تم تفعيل إشعارات النظام");
+                    }
+                });
+            }
+        }
+
+        // إظهار إشعار النظام
+        function showSystemNotification(title, message, type = 'warning') {
+            if (!appData.systemNotificationsEnabled) return;
+            
+            // استخدام إشعارات المتصفح إذا كانت مدعومة
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(title, {
+                    body: message,
+                    icon: '/favicon.ico'
+                });
+            }
+            
+            // إظهار إشعار مخصص في الصفحة
+            const notification = document.createElement('div');
+            notification.className = `system-notification ${type}`;
+            notification.innerHTML = `
+                <div class="notification-header">
+                    <div class="notification-title">${title}</div>
+                    <button class="notification-close">&times;</button>
+                </div>
+                <div class="notification-body">${message}</div>
+            `;
+            
+            elements.systemNotificationsContainer.appendChild(notification);
+            
+            // إظهار الإشعار
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            // إغلاق الإشعار عند النقر على الزر
+            notification.querySelector('.notification-close').addEventListener('click', () => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            });
+            
+            // إزالة الإشعار تلقائياً بعد 5 ثوان
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.classList.remove('show');
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 300);
+                }
+            }, 5000);
+        }
+
+        // بدء التتبع التلقائي
+        function startAutoTracking() {
+            if (appData.trackingInterval) {
+                clearInterval(appData.trackingInterval);
+            }
+            
+            appData.trackingInterval = setInterval(() => {
+                if (!appData.resetInProgress) {
+                    updateUsageData();
+                }
+            }, 5000); // تحديث كل 5 ثواني
+            
+            updateTrackingStatus();
+        }
+
+        // إيقاف التتبع التلقائي
+        function stopAutoTracking() {
+            if (appData.trackingInterval) {
+                clearInterval(appData.trackingInterval);
+                appData.trackingInterval = null;
+            }
+            updateTrackingStatus();
+        }
+
+        // تحديث حالة التتبع
+        function updateTrackingStatus() {
+            if (appData.autoTrackEnabled) {
+                elements.statusIndicator.classList.remove('inactive');
+                elements.statusText.textContent = 'جاري تتبع الاستهلاك...';
+            } else {
+                elements.statusIndicator.classList.add('inactive');
+                elements.statusText.textContent = 'التتبع متوقف';
+            }
+        }
+
+        // تحديث بيانات الاستهلاك - محسّن
+        function updateUsageData() {
+            if (appData.resetInProgress) return;
+            
+            const today = new Date();
+            const todayString = today.toISOString().split('T')[0];
+            const currentHour = today.getHours();
+            const currentMinute = today.getMinutes();
+            
+            // البحث عن بيانات اليوم
+            let todayData = appData.usageData.find(item => 
+                item.date.startsWith(todayString)
+            );
+            
+            if (!todayData) {
+                // إنشاء بيانات جديدة لليوم - تبدأ من الصفر
+                todayData = {
+                    date: today.toISOString(),
+                    amount: 0.0
+                };
+                appData.usageData.push(todayData);
+            }
+            
+            // حفظ الاستهلاك القديم لمقارنة التغير
+            const oldAmount = todayData.amount;
+            
+            // زيادة الاستهلاك بناءً على الوقت والنشاط - أكثر واقعية
+            let increment = 0;
+            
+            // نمط الاستهلاك خلال اليوم
+            if (currentHour >= 0 && currentHour < 6) {
+                // منتصف الليل - استخدام منخفض جداً
+                increment = Math.random() * 0.003; // 0 - 0.003 GB
+            } else if (currentHour >= 6 && currentHour < 9) {
+                // الصباح الباكر - استخدام منخفض
+                increment = Math.random() * 0.008 + 0.002; // 0.002 - 0.01 GB
+            } else if (currentHour >= 9 && currentHour < 17) {
+                // ساعات العمل - استخدام متوسط
+                increment = Math.random() * 0.015 + 0.005; // 0.005 - 0.02 GB
+            } else if (currentHour >= 17 && currentHour < 22) {
+                // المساء - استخدام عالي
+                increment = Math.random() * 0.025 + 0.01; // 0.01 - 0.035 GB
+            } else {
+                // Late night - استخدام منخفض
+                increment = Math.random() * 0.005; // 0 - 0.005 GB
+            }
+            
+            // تطبيق وضع توفير البيانات إذا كان مفعلاً
+            if (appData.dataSavingMode) {
+                increment *= 0.3; // تقليل الاستهلاك إلى 30%
+            }
+            
+            // تحديث المبلغ مع التأكد من الدقة
+            todayData.amount = parseFloat((todayData.amount + increment).toFixed(3));
+            appData.lastUpdate = today.toISOString();
+            
+            // حفظ البيانات وتحديث الواجهة
+            saveData();
+            renderData();
+            updateChart();
+            
+            // إظهار التغير إذا كان كبيراً بما يكفي
+            const change = todayData.amount - oldAmount;
+            if (change > 0.0005) {
+                showUsageChange(change);
+            }
+            
+            checkNotifications(oldAmount, todayData.amount);
+        }
+
+        // إظهار تغير الاستهلاك
+        function showUsageChange(change) {
+            if (change > 0.0005) {
+                elements.usageChange.textContent = `+${change.toFixed(3)} GB`;
+                elements.usageChange.className = 'usage-change positive';
+                
+                // إخفاء التغير بعد 3 ثوان
+                setTimeout(() => {
+                    elements.usageChange.textContent = '';
+                }, 3000);
+            }
+        }
+
+        // تبديل الوضع الليلي/النهاري
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            
+            if (document.body.classList.contains('dark-mode')) {
+                elements.themeToggle.innerHTML = '<i class="fas fa-sun"></i><span>الوضع النهاري</span>';
+                appData.theme = 'dark';
+            } else {
+                elements.themeToggle.innerHTML = '<i class="fas fa-moon"></i><span>الوضع الليلي</span>';
+                appData.theme = 'light';
+            }
+            
+            saveData();
+            
+            if (usageChart) {
+                updateChart();
+            }
+        }
+
+        // تعيين حد مخصص
+        function setCustomLimit() {
+            const customLimit = parseFloat(elements.customLimit.value);
+            if (customLimit && customLimit > 0) {
+                appData.dataLimit = customLimit;
+                document.querySelectorAll('.limit-option').forEach(o => o.classList.remove('active'));
+                saveData();
+                renderData();
+                checkNotifications();
+                elements.customLimit.value = '';
+                
+                showSystemNotification(
+                    'تم تحديث الحد', 
+                    `تم تعيين حد الاستهلاك إلى ${customLimit} GB`,
+                    'success'
+                );
+            }
+        }
+
+        // عرض البيانات
+        function renderData() {
+            const currentData = getCurrentPeriodData();
+            const total = currentData.total;
+            const average = currentData.average;
+            const peak = currentData.peak;
+            
+            // تحديث الاستهلاك الحالي
+            elements.currentUsage.textContent = `${total.toFixed(2)} GB`;
+            elements.usageLimitText.textContent = `من أصل ${appData.dataLimit} GB`;
+            
+            // تحديث شريط التقدم
+            const percentage = Math.min((total / appData.dataLimit) * 100, 100);
+            elements.usageProgress.style.width = `${percentage}%`;
+            elements.usagePercentage.textContent = `${percentage.toFixed(1)}% من الباقة المستخدمة`;
+            
+            // تحديث لون شريط التقدم
+            if (percentage >= 90) {
+                elements.usageProgress.className = 'progress danger';
+            } else if (percentage >= 70) {
+                elements.usageProgress.className = 'progress warning';
+            } else {
+                elements.usageProgress.className = 'progress safe';
+            }
+            
+            // تحديث الإحصائيات
+            elements.totalUsage.textContent = `${total.toFixed(2)} GB`;
+            elements.peakUsage.textContent = `${peak.amount.toFixed(2)} GB`;
+            elements.peakDate.textContent = `(${formatDate(peak.date)})`;
+            elements.averageUsage.textContent = `${average.toFixed(2)} GB`;
+        }
+
+        // الحصول على بيانات الفترة الحالية
+        function getCurrentPeriodData() {
+            const today = new Date();
+            let startDate = new Date();
+            
+            switch (appData.currentPeriod) {
+                case 'day':
+                    startDate.setDate(today.getDate() - 1);
+                    break;
+                case 'week':
+                    startDate.setDate(today.getDate() - 7);
+                    break;
+                case 'month':
+                    startDate.setDate(today.getDate() - 30);
+                    break;
+                case 'year':
+                    startDate.setDate(today.getDate() - 365);
+                    break;
+            }
+            
+            const periodData = appData.usageData.filter(item => {
+                const itemDate = new Date(item.date);
+                return itemDate >= startDate && itemDate <= today;
+            });
+            
+            const total = periodData.reduce((sum, item) => sum + parseFloat(item.amount), 0);
+            const average = periodData.length > 0 ? total / periodData.length : 0;
+            
+            // إيجاد أعلى استهلاك
+            let peak = { date: today, amount: 0 };
+            if (periodData.length > 0) {
+                peak = periodData.reduce((max, item) => {
+                    return parseFloat(item.amount) > parseFloat(max.amount) ? item : max;
+                }, periodData[0]);
+            }
+            
+            return {
+                data: periodData,
+                total,
+                average,
+                peak
+            };
+        }
+
+        // تحديث المخطط
+        function updateChart() {
+            const ctx = elements.usageChart.getContext('2d');
+            const currentData = getCurrentPeriodData();
+            
+            // إعداد البيانات للمخطط
+            const labels = [];
+            const data = [];
+            
+            currentData.data.forEach(item => {
+                labels.push(formatDate(item.date));
+                data.push(parseFloat(item.amount));
+            });
+            
+            // إذا لم تكن هناك بيانات، أضف بيانات افتراضية
+            if (labels.length === 0) {
+                labels.push('لا توجد بيانات');
+                data.push(0);
+            }
+            
+            // تدمير المخطط الحالي إذا كان موجوداً
+            if (usageChart) {
+                usageChart.destroy();
+            }
+            
+            // إنشاء مخطط جديد
+            usageChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'الاستهلاك (GB)',
+                        data: data,
+                        backgroundColor: getComputedStyle(document.body).getPropertyValue('--primary'),
+                        borderColor: getComputedStyle(document.body).getPropertyValue('--secondary'),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + ' GB';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // التحقق من التنبيهات
+        function checkNotifications(oldAmount = 0, newAmount = 0) {
+            // تنظيف الإشعارات القديمة في الواجهة
+            if (!appData.notificationsEnabled) {
+                elements.notificationsContainer.innerHTML = '';
+                return;
+            }
+            
+            const currentData = getCurrentPeriodData();
+            const total = currentData.total;
+            const percentage = (total / appData.dataLimit) * 100;
+            
+            let notifications = [];
+            let systemNotificationShown = false;
+            
+            // إضافة التنبيهات بناءً على النسبة
+            if (percentage >= 100) {
+                notifications.push({
+                    type: 'danger',
+                    icon: 'fas fa-exclamation-circle',
+                    message: `لقد تجاوزت حد الاستهلاك! استهلاكك ${total.toFixed(2)} GB من ${appData.dataLimit} GB. الرجاء تقليل الاستخدام.`
+                });
+                
+                if (!systemNotificationShown) {
+                    showSystemNotification(
+                        'تجاوز حد الاستهلاك!', 
+                        `لقد استهلكت ${total.toFixed(2)} GB من ${appData.dataLimit} GB. الرجاء تقليل الاستخدام.`,
+                        'danger'
+                    );
+                    systemNotificationShown = true;
+                }
+            } else if (percentage >= 90) {
+                notifications.push({
+                    type: 'danger',
+                    icon: 'fas fa-exclamation-triangle',
+                    message: `لم يتبق إلا ${(appData.dataLimit - total).toFixed(2)} GB من الباقة! الرجاء الانتباه لاستخدامك.`
+                });
+                
+                if (!systemNotificationShown) {
+                    showSystemNotification(
+                        'تنبيه استهلاك!', 
+                        `لم يتبق إلا ${(appData.dataLimit - total).toFixed(2)} GB من الباقة!`,
+                        'danger'
+                    );
+                    systemNotificationShown = true;
+                }
+            } else if (percentage >= 70) {
+                notifications.push({
+                    type: 'warning',
+                    icon: 'fas fa-exclamation-triangle',
+                    message: `لقد استهلكت ${percentage.toFixed(1)}% من باقتك. المتبقي ${(appData.dataLimit - total).toFixed(2)} GB.`
+                });
+                
+                if (!systemNotificationShown) {
+                    showSystemNotification(
+                        'تنبيه استهلاك', 
+                        `لقد استهلكت ${percentage.toFixed(1)}% من باقتك`,
+                        'warning'
+                    );
+                    systemNotificationShown = true;
+                }
+            }
+            
+            // إضافة تنبيه إيجابي إذا كان الاستهلاك منخفضاً
+            if (percentage < 50 && currentData.data.length > 0) {
+                notifications.push({
+                    type: 'success',
+                    icon: 'fas fa-check-circle',
+                    message: 'أحسنت! استهلاكك هذا الشهر ضمن المعدل الطبيعي.'
+                });
+            }
+            
+            // عرض التنبيهات في الواجهة
+            elements.notificationsContainer.innerHTML = '';
+            notifications.forEach(notification => {
+                const notificationElement = document.createElement('div');
+                notificationElement.className = `notification ${notification.type}`;
+                notificationElement.innerHTML = `
+                    <i class="${notification.icon}"></i>
+                    <div>${notification.message}</div>
+                `;
+                elements.notificationsContainer.appendChild(notificationElement);
+            });
+        }
+
+        // إعادة تعيين البيانات - الإصدار المصحح تماماً
+        function resetData() {
+            if (confirm('هل أنت متأكد من أنك تريد إعادة تعيين جميع البيانات؟ لا يمكن التراجع عن هذا الإجراء.')) {
+                // تعيين علامة أن الإعادة قيد التقدم
+                appData.resetInProgress = true;
+                
+                // إيقاف التتبع مؤقتاً
+                stopAutoTracking();
+                
+                // إنشاء بيانات جديدة تماماً من الصفر
+                generateFreshInitialData();
+                
+                // إعادة تعيين التحديث الأخير
+                appData.lastUpdate = new Date().toISOString();
+                
+                // حفظ البيانات فوراً
+                saveData();
+                
+                // إعادة الرسم فوراً
+                renderData();
+                updateChart();
+                checkNotifications();
+                
+                // إعادة تشغيل التتبع بعد تأكيد حفظ البيانات
+                setTimeout(() => {
+                    appData.resetInProgress = false;
+                    if (appData.autoTrackEnabled) {
+                        startAutoTracking();
+                    }
+                    
+                    // التأكد من أن البيانات صفرية
+                    const currentData = getCurrentPeriodData();
+                    console.log('بعد الإعادة - الاستهلاك الحالي:', currentData.total);
+                    
+                }, 100);
+                
+                showSystemNotification(
+                    'تم إعادة التعيين', 
+                    'تم مسح جميع بيانات الاستهلاك والبدء من الصفر',
+                    'success'
+                );
+            }
+        }
+
+        // تنسيق التاريخ
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ar-EG', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        // تهيئة التطبيق عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
